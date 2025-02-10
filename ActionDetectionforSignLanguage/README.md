@@ -25,8 +25,8 @@ Model Architecture: CNN, LSTM, or Transformer-based models
 
 Dataset: Publicly available sign language datasets (e.g., RWTH-PHOENIX-Weather, ASLLVD, or custom datasets)
 
-#Installation
-#
+
+
 
 #dataset upload
 
@@ -36,7 +36,7 @@ i have added datasets of hello ,hii,i love you ,thanks etc.
 ![image](https://github.com/user-attachments/assets/d730c7b8-6f1d-48ed-8f42-0c62c5ce7f71)
 
 
-#train module
+**#train module**
 during training of module you need to understand all keypoints and versions update like tensorflow and allsuitaible according to your data
 
 after that the results will be displayed to you by showing hand gestures and matching results will be dsiplayed 
@@ -60,7 +60,7 @@ Download or prepare the dataset and place it in the data/ directory.
 python train.py  # For training
 python detect.py  # For real-time detection
 
-#Usage
+**#Usage**
 
 Training a Model: Run train.py with appropriate dataset configurations.
 
@@ -68,7 +68,9 @@ Real-time Detection: Use detect.py to detect gestures in real-time using a webca
 
 Custom Dataset: Modify config.yaml to add new datasets and retrain the model.
 
-#Dataset
+
+
+**#Dataset**
 
 You can use existing sign language datasets or create your own by recording and labeling sign gestures. Supported dataset formats:
 
@@ -78,8 +80,8 @@ Image sequences with keypoint annotations
 
 CSV files for action labels
 
-#Model Training
-
+**#Model Training
+**
 Preprocess the dataset and extract keypoints.
 
 Train the model using CNN, RNN (LSTM), or Transformer-based architectures.
@@ -88,15 +90,15 @@ Evaluate model performance using accuracy and loss metrics.
 
 Optimize for real-time performance and deploy the model.
 
-#Contributing
-
+**#Contributing
+**
 Contributions are welcome! Feel free to open issues or submit pull requests to improve the project.
 
-#License
+**#License**
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-#Acknowledgments
+**#Acknowledgments**
 
 Thanks to open-source datasets and research papers on sign language recognition.
 
