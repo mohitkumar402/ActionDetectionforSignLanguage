@@ -1,0 +1,24 @@
+# Sign Language Detection Backend Requirements
+
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+websockets==12.0
+
+# ML & Vision
+tensorflow==2.13.0
+mediapipe==0.10.7
+opencv-python==4.8.1.78
+numpy==1.24.3
+scikit-learn==1.3.2
+
+# Utilities
+pydantic==2.4.2
+python-dotenv==1.0.0
+
+# Dataset seeding (optional)
+kaggle>=1.6.0          # Kaggle API: pip install kaggle
+yt-dlp>=2024.1.0       # YouTube downloader: pip install yt-dlp
+pandas>=2.0.0          # For ASL Signs parquet dataset
+pyarrow>=14.0.0        # Parquet support for pandas

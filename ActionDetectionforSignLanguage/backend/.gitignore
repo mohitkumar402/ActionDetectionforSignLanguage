@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+server.log
+*.log
+.env
+action.h5
+_kaggle_tmp_*/
+_yt_tmp_*/

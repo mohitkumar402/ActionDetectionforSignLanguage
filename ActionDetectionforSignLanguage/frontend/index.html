@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SignSense — AI Sign Language Interpreter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ─── Background Particles ─────────────────────────────────── -->
+  <div class="bg-grid"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <!-- ─── Header ───────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <span class="logo-icon">🤟</span>
+        <span class="logo-text">Sign<span class="accent">Sense</span></span>
+      </div>
+      <div class="version-badge">v1.0 · LSTM + MediaPipe</div>
+    </div>
+    <div class="header-center">
+      <div class="status-pill" id="connectionStatus">
+        <span class="status-dot"></span>
+        <span class="status-text">Connecting...</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="icon-btn" id="settingsBtn" title="Settings">⚙️</button>
+      <button class="icon-btn" id="helpBtn" title="Help">❓</button>
+      <div class="fps-counter">
+        <span class="fps-label">FPS</span>
+        <span class="fps-value" id="fpsValue">--</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── Main Layout ───────────────────────────────────────────── -->
+  <main class="main-layout">
+
+    <!-- ── LEFT PANEL ─── -->
+    <aside class="panel panel-left">
+
+      <!-- Session Stats -->
+      <div class="card stats-card">
+        <div class="card-header">
+          <span class="card-icon">📊</span>
+          <h3>Session Stats</h3>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="totalPredictions">0</div>
+            <div class="stat-label">Predictions</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="avgConfidence">0%</div>
+            <div class="stat-label">Avg Confidence</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="uptime">0s</div>
+            <div class="stat-label">Uptime</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="frameCount">0</div>
+            <div class="stat-label">Frames</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gesture Confidence Bars -->
+      <div class="card confidence-card">
+        <div class="card-header">
+          <span class="card-icon">🎯</span>
+          <h3>Live Confidence</h3>
+          <span class="card-badge" id="detectionBadge">Idle</span>
+        </div>
+        <div class="confidence-bars" id="confidenceBars">
+          <!-- dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Gesture Usage Chart -->
+      <div class="card usage-card">
+        <div class="card-header">
+          <span class="card-icon">📈</span>
+          <h3>Gesture Usage</h3>
+        </div>
+        <div class="usage-bars" id="usageBars">
+          <!-- dynamically populated -->
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ── CENTER: CAMERA ─── -->
+    <section class="center-panel">
+
+      <!-- Camera Feed -->
+      <div class="camera-container" id="cameraContainer">
+        <div class="camera-frame">
+          <video id="videoInput" autoplay playsinline muted></video>
+          <canvas id="overlayCanvas"></canvas>
+          <img id="annotatedFeed" alt="Annotated Feed" />
+
+          <!-- Scanning overlay -->
+          <div class="scan-overlay" id="scanOverlay">
+            <div class="scan-corners">
+              <div class="corner tl"></div>
+              <div class="corner tr"></div>
+              <div class="corner bl"></div>
+              <div class="corner br"></div>
+            </div>
+            <div class="scan-line" id="scanLine"></div>
+            <div class="scan-label" id="scanLabel">READY</div>
+          </div>
+
+          <!-- Landmarks detected indicator -->
+          <div class="landmark-indicator" id="landmarkIndicator">
+            <span class="lm-dot"></span>
+            <span id="landmarkText">No hands detected</span>
+          </div>
+
+          <!-- Sequence fill bar -->
+          <div class="sequence-bar-container">
+            <div class="sequence-bar-fill" id="sequenceBarFill"></div>
+            <span class="sequence-bar-label" id="sequenceBarLabel">Buffer: 0/30</span>
+          </div>
+        </div>
+
+        <!-- Camera Controls -->
+        <div class="camera-controls">
+          <button class="ctrl-btn ctrl-primary" id="startBtn">
+            <span class="btn-icon">▶</span>
+            <span class="btn-label">Start Camera</span>
+          </button>
+          <button class="ctrl-btn ctrl-secondary" id="pauseBtn" disabled>
+            <span class="btn-icon">⏸</span>
+            <span class="btn-label">Pause</span>
+          </button>
+          <button class="ctrl-btn ctrl-danger" id="stopBtn" disabled>
+            <span class="btn-icon">⏹</span>
+            <span class="btn-label">Stop</span>
+          </button>
+          <button class="ctrl-btn ctrl-outline" id="flipBtn">
+            <span class="btn-icon">↔</span>
+            <span class="btn-label">Flip</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Sentence Output Area ── -->
+      <div class="sentence-panel">
+        <div class="sentence-header">
+          <div class="sentence-title">
+            <span class="sentence-icon">💬</span>
+            <span>Translated Sentence</span>
+          </div>
+          <div class="sentence-actions">
+            <button class="action-btn" id="ttsBtn" title="Text to Speech">🔊</button>
+            <button class="action-btn" id="copyBtn" title="Copy Text">📋</button>
+            <button class="action-btn danger" id="clearBtn" title="Clear Sentence">🗑</button>
+          </div>
+        </div>
+        <div class="sentence-display" id="sentenceDisplay">
+          <span class="placeholder-text">Start camera and make gestures to see translation here...</span>
+        </div>
+        <div class="sentence-footer">
+          <span class="word-count" id="wordCount">0 words</span>
+          <span class="last-gesture" id="lastGesture"></span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── RIGHT PANEL ─── -->
+    <aside class="panel panel-right">
+
+      <!-- Current Prediction Hero -->
+      <div class="card prediction-hero-card" id="predictionHero">
+        <div class="prediction-emoji" id="predictionEmoji">🤚</div>
+        <div class="prediction-label" id="predictionLabel">Waiting...</div>
+        <div class="prediction-confidence">
+          <div class="conf-ring" id="confRing">
+            <svg viewBox="0 0 80 80" class="ring-svg">
+              <circle cx="40" cy="40" r="32" class="ring-bg"/>
+              <circle cx="40" cy="40" r="32" class="ring-fill" id="ringFill"/>
+            </svg>
+            <div class="conf-value" id="confValue">0%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gesture Dictionary -->
+      <div class="card gesture-dict-card">
+        <div class="card-header">
+          <span class="card-icon">📖</span>
+          <h3>Gesture Dictionary</h3>
+        </div>
+        <div class="gesture-grid" id="gestureGrid">
+          <!-- dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Detection History -->
+      <div class="card history-card">
+        <div class="card-header">
+          <span class="card-icon">🕐</span>
+          <h3>Recent History</h3>
+          <button class="mini-btn" id="clearHistoryBtn">Clear</button>
+        </div>
+        <div class="history-list" id="historyList">
+          <div class="empty-state">No detections yet</div>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- ─── Settings Modal ────────────────────────────────────────── -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>⚙️ Settings</h2>
+        <button class="modal-close" id="closeSettings">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-group">
+          <label class="setting-label">Backend URL</label>
+          <input type="text" class="setting-input" id="backendUrl" value="ws://127.0.0.1:8001" />
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">Confidence Threshold</label>
+          <input type="range" min="0.1" max="1.0" step="0.05" value="0.5" id="thresholdSlider" />
+          <span class="setting-value" id="thresholdValue">0.50</span>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">Frame Rate (max)</label>
+          <select class="setting-select" id="fpsLimit">
+            <option value="15">15 FPS</option>
+            <option value="24" selected>24 FPS</option>
+            <option value="30">30 FPS</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">Show Annotated Feed</label>
+          <label class="toggle">
+            <input type="checkbox" id="showAnnotated" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">Auto Text-to-Speech</label>
+          <label class="toggle">
+            <input type="checkbox" id="autoTts" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">Show Landmark Overlay</label>
+          <label class="toggle">
+            <input type="checkbox" id="showLandmarks" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn primary" id="saveSettings">Save Settings</button>
+        <button class="modal-btn" id="resetSettings">Reset to Default</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Toast Notifications ───────────────────────────────────── -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ─── MediaPipe (browser-side, GPU-accelerated) ───────────── -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+
+  <!-- ─── App ──────────────────────────────────────────────────── -->
+  <script src="js/app.js"></script>
+</body>
+</html>
