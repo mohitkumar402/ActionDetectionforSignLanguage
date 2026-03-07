@@ -1,109 +1,169 @@
-# ActionDetectionforSignLanguage
-Overview
+## ActionDetectionforSignLanguage — Full-Stack Sign Language Interpreter
 
-Action Detection for Sign Language is a machine learning-based project that aims to recognize and detect sign language gestures from video input. The system uses computer vision and deep learning techniques to identify hand movements and gestures, enabling better communication for individuals with hearing impairments.
+ActionDetectionforSignLanguage is a full‑stack sign language interpreter that uses computer vision and deep learning to recognize hand gestures from live video and translate them into text (and optional speech).  
+The project combines a Python FastAPI backend with a modern, browser‑based frontend for real‑time interaction.
 
-#Features
+---
 
-Real-time sign language gesture detection
+## Project Structure
 
-Action recognition using deep learning models
+```text
+ActionDetectionforSignLanguage/
+├── ActionDetectionforSignLanguage/
+│   └── Action Detection Refined.ipynb   ← Original training notebook
+├── backend/
+│   ├── main.py                          ← FastAPI server (REST + WebSocket)
+│   ├── model_handler.py                 ← LSTM model loader/inference
+│   ├── seed_dataset.py                  ← Optional dataset seeding script
+│   └── requirements.txt                 ← Python dependencies
+├── frontend/
+│   ├── index.html                       ← Main UI
+│   ├── css/
+│   │   └── styles.css                   ← Styles (dark glassmorphism theme)
+│   └── js/
+│       └── app.js                       ← WebSocket client + UI controller
+└── README.md                            ← You are here
+```
 
-Support for multiple sign languages
+For a more detailed breakdown of features and future improvements, see `ActionDetectionforSignLanguage/FULLSTACK_GUIDE.md`.
 
-User-friendly interface for accessibility
+---
 
-#Technologies Used
+## Features
 
-Programming Language: Python
+- **Real-time sign language gesture detection** from webcam input
+- **LSTM-based action recognition model** running in the backend
+- **WebSocket streaming** for low‑latency frame processing and predictions
+- **Live UI visualizations**: confidence bars, sentence builder, history, stats
+- **Text-to-speech output** (browser Web Speech API)
+- **Dark, accessible UI** designed for clear, low‑distraction usage
 
-Deep Learning Frameworks: TensorFlow / PyTorch
+---
 
-Computer Vision: OpenCV, MediaPipe
+## Quick Start
 
-Model Architecture: CNN, LSTM, or Transformer-based models
+### 1. Clone the repository
 
-Dataset: Publicly available sign language datasets (e.g., RWTH-PHOENIX-Weather, ASLLVD, or custom datasets)
-
-
-
-
-#dataset upload
-
-you can add datasets either of your won or by downloading form kaggle 
-i have added datasets of hello ,hii,i love you ,thanks etc.
-
-![image](https://github.com/user-attachments/assets/d730c7b8-6f1d-48ed-8f42-0c62c5ce7f71)
-
-
-**#train module**
-during training of module you need to understand all keypoints and versions update like tensorflow and allsuitaible according to your data
-
-after that the results will be displayed to you by showing hand gestures and matching results will be dsiplayed 
-
-# Installation
-#clone the repository:
-
+```bash
 git clone https://github.com/mohitkumar402/ActionDetectionforSignLanguage.git
 cd ActionDetectionforSignLanguage
+```
 
-#Create a virtual environment and install dependencies:
+### 2. Set up the backend (Python)
 
-python -m venv env
-source env/bin/activate  # On Windows: env\Scripts\activate
+It is recommended to use a virtual environment.
+
+```bash
+cd ActionDetectionforSignLanguage/backend
+python -m venv .venv
+# Windows
+.venv\\Scripts\\activate
+# macOS / Linux
+source .venv/bin/activate
+
 pip install -r requirements.txt
+```
 
-Download or prepare the dataset and place it in the data/ directory.
+### 3. Provide the trained model (`action.h5`)
 
-#Train the model or use a pre-trained model:
+1. Train your model using the notebook in `ActionDetectionforSignLanguage/Action Detection Refined.ipynb`,  
+   **or** use your own trained `action.h5`.
+2. Place the resulting `action.h5` file inside the `backend/` folder.
 
-python train.py  # For training
-python detect.py  # For real-time detection
+Dataset notes:
+- You can create your own dataset (e.g., gestures like *hello*, *hi*, *I love you*, *thanks*, etc.).
+- You can also adapt public sign language datasets (e.g., RWTH‑PHOENIX‑Weather, ASLLVD) to this format.
 
-**#Usage**
+### 4. Run the backend server
 
-Training a Model: Run train.py with appropriate dataset configurations.
+From the `backend/` directory:
 
-Real-time Detection: Use detect.py to detect gestures in real-time using a webcam.
+```bash
+python main.py
+# or, using uvicorn directly:
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
 
-Custom Dataset: Modify config.yaml to add new datasets and retrain the model.
+Then open API docs at: `http://localhost:8000/docs`
 
+### 5. Open the frontend
 
+From the repository root:
 
-**#Dataset**
+```bash
+cd ActionDetectionforSignLanguage/frontend
+```
 
-You can use existing sign language datasets or create your own by recording and labeling sign gestures. Supported dataset formats:
+Then open `index.html` in your browser:
 
-Videos (MP4, AVI, etc.)
+- Double‑click `index.html`, or
+- Serve it with any simple static server (e.g., Live Server in VS Code).
 
-Image sequences with keypoint annotations
+The frontend will connect to the backend WebSocket (by default `ws://localhost:8000/ws/{session_id}`) and start streaming frames when you enable the camera.
 
-CSV files for action labels
+---
 
-**#Model Training
-**
-Preprocess the dataset and extract keypoints.
+## Backend API (Overview)
 
-Train the model using CNN, RNN (LSTM), or Transformer-based architectures.
+Key endpoints (see `/docs` for full details):
 
-Evaluate model performance using accuracy and loss metrics.
+- `GET /api/health` — Health check
+- `GET /api/model/info` — Model status and metadata
+- `GET /api/gestures` — List of supported gestures
+- `GET /api/session/{id}/stats` — Session statistics
+- `GET /api/session/{id}/history` — Recent predictions
+- `DELETE /api/session/{id}` — Close a session
+- `POST /api/session/{id}/reset-sentence` — Clear the current sentence
+- `WebSocket /ws/{session_id}` — Real‑time frame streaming and predictions
 
-Optimize for real-time performance and deploy the model.
+WebSocket messages follow a simple JSON protocol (frames from client, predictions from server); see `FULLSTACK_GUIDE.md` for exact formats.
 
-**#Contributing
-**
-Contributions are welcome! Feel free to open issues or submit pull requests to improve the project.
+---
 
-**#License**
+## Model & Training
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+The core model is an action recognition network (e.g., CNN + LSTM) trained on sequences of pose/keypoint features extracted from sign language video.
 
-**#Acknowledgments**
+Typical training pipeline:
 
-Thanks to open-source datasets and research papers on sign language recognition.
+1. **Collect / prepare dataset** of labeled sign gestures.
+2. **Extract keypoints** using MediaPipe (hands, pose, face as needed).
+3. **Train the sequence model** (LSTM or Transformer) on these keypoints.
+4. **Export** the trained model as `action.h5` and place it in `backend/`.
 
-Inspired by advancements in action recognition and human pose estimation.
+You can customize:
 
-🚀 Let's bridge the communication gap with AI-powered sign language detection!
+- Number and type of gestures (ASL, ISL, custom signs, etc.)
+- Model architecture (LSTM, bi‑LSTM, Transformer)
+- Input features (single hand vs. both hands, inclusion of face/pose)
 
+---
 
+## Contributing
+
+Contributions are welcome!  
+You can:
+
+- Open issues for bugs, ideas, or improvements.
+- Submit pull requests for:
+  - New gestures or datasets
+  - UI/UX improvements in the frontend
+  - Backend API enhancements or performance optimizations
+  - Better documentation and examples
+
+Please keep changes small and focused where possible.
+
+---
+
+## License
+
+This project is licensed under the **MIT License** — see the `LICENSE` file for details.
+
+---
+
+## Acknowledgments
+
+- Open‑source sign language datasets and research papers on sign/action recognition
+- MediaPipe, TensorFlow/Keras, FastAPI, and the broader open‑source community
+
+Let’s continue using AI to help **bridge the communication gap** for the Deaf and hard‑of‑hearing community.
